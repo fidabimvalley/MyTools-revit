@@ -1,0 +1,8 @@
+{
+  "toolName": "MyTools",
+  "supabaseUrl": "https://lsndjqoysgmavxqueuvc.supabase.co",
+  "supabaseKey": "sb_publishable_G7YT48KfUAC7YY6bRzoXpA_hQag5DBa",
+  "sourceExtension": "MyTools.extension",
+  "offlineDays": 3,
+  "contact": "the MyTools administrator"
+}
