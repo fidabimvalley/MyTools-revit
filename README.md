@@ -6,21 +6,21 @@ A pyRevit toolbar for Revit. Sign up with your email; the MyTools administrator 
 
 You need [pyRevit](https://github.com/pyrevitlabs/pyRevit/releases) installed first.
 
-**Option A: one command (recommended).** Open **Command Prompt** and run:
+1. **[Download Install-MyTools.bat](https://github.com/fidabimvalley/mytools-revit/releases/download/installer/Install-MyTools.bat)**.
+2. Double-click it. If Windows warns *"Windows protected your PC"*, click **More info → Run anyway**.
+3. Start Revit, or click **pyRevit → Reload** if Revit is already open.
 
+A **MyTools** tab appears with **Sign In** and **Account** buttons.
+
+<details><summary>Other ways to install</summary>
+
+**With the pyRevit command line:**
 ```
 pyrevit extend ui MyTools https://github.com/fidabimvalley/mytools-revit.git
 ```
 
-Then start Revit, or click **pyRevit → Reload** if Revit is already open.
-
-**Option B: by hand.**
-1. Click the green **Code** button on this page → **Download ZIP**, and unzip it.
-2. Rename the unzipped folder to exactly `MyTools.extension`.
-3. Move it into `%APPDATA%\pyRevit\Extensions\` (paste that into the File Explorer address bar).
-4. Start Revit, or click **pyRevit → Reload**.
-
-A **MyTools** tab appears with **Sign In** and **Account** buttons.
+**By hand:** click **Code → Download ZIP**, unzip it, rename the folder to `MyTools.extension`, and move it into `%APPDATA%\pyRevit\Extensions\`.
+</details>
 
 ## Sign up / sign in
 

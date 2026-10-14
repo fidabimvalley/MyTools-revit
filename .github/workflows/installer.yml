@@ -1,0 +1,28 @@
+name: Publish installer
+
+# Keeps Install-MyTools.bat available as a one-click download on the Releases page.
+on:
+  push:
+    branches: [main]
+    paths: ["installer/**", ".github/workflows/installer.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Upload installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view installer >/dev/null 2>&1; then
+            gh release upload installer installer/Install-MyTools.bat --clobber
+          else
+            gh release create installer installer/Install-MyTools.bat --target "$GITHUB_SHA" \
+              --title "MyTools for Revit installer" \
+              --notes "Download **Install-MyTools.bat** below and double-click it. Needs pyRevit. If Windows warns about the file, click **More info → Run anyway**."
+          fi
