@@ -71,7 +71,7 @@ def make_handler(sb):
             self.wfile.write(body)
 
         def do_POST(self):
-            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))).decode("utf-8") or "{}")
             url = urlparse(self.path)
             sb.calls.append(url.path)
             if self.headers.get("apikey") != KEY:
