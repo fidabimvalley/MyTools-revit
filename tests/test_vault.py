@@ -154,8 +154,22 @@ def make_source(ext):
     write(ext, "MyTools.tab/Demo.panel/Boom.pushbutton/BAK/script.py", "OLD = 1\n")
 
 
+ACCOUNT_STUB = (u"from mytools_vault import core, ui\n"
+                u"ui.%s(core.load_config(core.find_extension_root(__file__)))\n")
+
+
 def install_public_extension(dest, port):
-    shutil.copytree(PUBLIC, dest, ignore=shutil.ignore_patterns("tests", "tools", ".git", "__pycache__"))
+    """What a user's PC has after installing: vault.json and the access library, plus the Sign In and
+    Account buttons (in the add-in these are built in; here they are small scripts doing the same)."""
+    os.makedirs(dest)
+    shutil.copy(os.path.join(PUBLIC, "vault.json"), dest)
+    shutil.copytree(os.path.join(PUBLIC, "lib"), os.path.join(dest, "lib"),
+                    ignore=shutil.ignore_patterns("__pycache__"))
+    for name, fn in (("SignIn", "sign_in"), ("Account", "account")):
+        d = os.path.join(dest, "MyTools.tab", "Account.panel", name + ".pushbutton")
+        os.makedirs(d)
+        with open(os.path.join(d, "script.py"), "w") as f:
+            f.write(ACCOUNT_STUB % fn)
     cfg = json.load(open(os.path.join(dest, "vault.json")))
     cfg.update(supabaseKey=KEY, contact="the BIM team")
     json.dump(cfg, open(os.path.join(dest, "vault.json"), "w"))
@@ -367,6 +381,8 @@ def main():
     srv.shutdown()
     shutil.rmtree(TMP, ignore_errors=True)
     print("\n%d checks passed" % passed[0])
+    if os.environ.get("GITHUB_ACTIONS"):
+        print("::notice title=Access tests::%d checks passed (Python %s)" % (passed[0], sys.version.split()[0]))
 
 
 if __name__ == "__main__":

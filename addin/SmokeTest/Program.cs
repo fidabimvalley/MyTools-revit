@@ -35,10 +35,10 @@ static class Program
         Console.WriteLine("IronPython " + engine.LanguageVersion + " running " + file);
         try
         {
+            // runpy runs the file as __main__, so `if __name__ == "__main__":` blocks run too.
             var scope = engine.CreateScope();
-            scope.SetVariable("__name__", "__main__");
-            scope.SetVariable("__file__", file);
-            engine.CreateScriptSourceFromFile(file).Execute(scope);
+            scope.SetVariable("_target", file);
+            engine.Execute("import runpy\nrunpy.run_path(_target, run_name='__main__')", scope);
             return 0;
         }
         catch (IronPython.Runtime.Exceptions.SystemExitException ex)

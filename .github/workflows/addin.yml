@@ -56,8 +56,10 @@ jobs:
         env:
           MYTOOLS_VAULT_TEST: "1"
         run: |
-          out/smoke/SmokeTest.exe --path lib --path tools tests/test_vault.py
-          if ($LASTEXITCODE) { "::error::Access tests failed in IronPython"; exit 1 }
+          $out = & out/smoke/SmokeTest.exe --path lib --path tools tests/test_vault.py 2>&1
+          $code = $LASTEXITCODE
+          $out
+          if ($code) { "::error title=Access tests failed in IronPython::" + (($out | Select-Object -Last 25) -join '%0A'); exit 1 }
 
       - uses: actions/upload-artifact@v4
         with:
