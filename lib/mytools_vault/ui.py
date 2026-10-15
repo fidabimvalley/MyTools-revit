@@ -125,6 +125,13 @@ def _blocked(session, email):
           sub_msg="If you think this is a mistake, contact %s." % _contact(cfg))
 
 
+def _unreachable(cfg, title, err):
+    """The server couldn't be reached. Show why, so a firewall or proxy problem can be spotted."""
+    alert("Can't reach the %s server. Check your internet connection and try again." % cfg["toolName"], title,
+          sub_msg="If your internet works, a company firewall or proxy may be blocking %s.\n\nDetails: %s"
+                  % (cfg.get("supabaseUrl", "the server"), err or "no response"))
+
+
 # ------------------------------------------------------------------ Sign In button
 def sign_in(cfg):
     if core.Session(cfg).token_info():
@@ -144,8 +151,8 @@ def sign_in(cfg):
         alert("That doesn't look like an email address. Please try again.", title)
     try:
         core.send_code(cfg, email)
-    except compat.NetworkError:
-        return alert("Can't reach the %s server. Check your internet connection and try again." % cfg["toolName"], title)
+    except compat.NetworkError as e:
+        return _unreachable(cfg, title, e)
     except Exception as e:
         return alert(str(e), title)
 
@@ -168,8 +175,8 @@ def sign_in(cfg):
                     return alert(str(e), title)
             elif choice != "Try again":
                 return
-        except compat.NetworkError:
-            return alert("Can't reach the %s server. Check your internet connection and try again." % cfg["toolName"], title)
+        except compat.NetworkError as e:
+            return _unreachable(cfg, title, e)
     return _after_sign_in(cfg, email)
 
 
@@ -261,9 +268,8 @@ def sync_now(cfg):
         if session.token_info():
             return revoked(session, signed_out=True)
         return need_sign_in(cfg)
-    except compat.NetworkError:
-        alert("Can't reach the %s server. Check your internet connection and try again." % cfg["toolName"], cfg["toolName"])
-        return
+    except compat.NetworkError as e:
+        return _unreachable(cfg, cfg["toolName"], e)
     _sync_and_report(session, "Access approved.")
 
 

@@ -280,6 +280,13 @@ def _():
                                     {"apikey": cfg["supabaseKey"]})
     assert status == 200, (status, data)
     assert data.get("external", {}).get("email") is True, "email sign-in is not enabled"
+    # POST, the way Sign In sends its requests: a made-up code must be refused by the server (not a network error).
+    from mytools_vault import core
+    try:
+        core.verify_code(cfg, "smoke-test@example.invalid", "000000")
+        raise AssertionError("a made-up code was accepted")
+    except core.BadCode:
+        pass
 
 
 @check("button sources compile in IronPython 3.4")
