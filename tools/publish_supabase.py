@@ -29,6 +29,11 @@ def git_sha(data):
     return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
 
 
+def _read(path):
+    with open(path, "rb") as f:   # closed straight away: IronPython doesn't close files on its own
+        return f.read()
+
+
 def collect(ext_dir):
     """All files to publish, as {path: bytes}."""
     ext_dir = os.path.normpath(ext_dir)
@@ -41,7 +46,7 @@ def collect(ext_dir):
             if name.endswith(".py"):
                 full = os.path.join(dirpath, name)
                 rel = os.path.relpath(full, ext_dir).replace(os.sep, "/")
-                files[ext_name + "/" + rel] = open(full, "rb").read()
+                files[ext_name + "/" + rel] = _read(full)
     with tempfile.TemporaryDirectory() as tmp:
         shell_dir = os.path.join(tmp, "_shell")
         build_shell.build(ext_dir, shell_dir)
@@ -49,7 +54,7 @@ def collect(ext_dir):
             for name in filenames:
                 full = os.path.join(dirpath, name)
                 rel = os.path.relpath(full, shell_dir).replace(os.sep, "/")
-                files["_shell/" + rel] = open(full, "rb").read()
+                files["_shell/" + rel] = _read(full)
     return files
 
 

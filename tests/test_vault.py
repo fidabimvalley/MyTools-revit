@@ -170,9 +170,11 @@ def install_public_extension(dest, port):
         os.makedirs(d)
         with open(os.path.join(d, "script.py"), "w") as f:
             f.write(ACCOUNT_STUB % fn)
-    cfg = json.load(open(os.path.join(dest, "vault.json")))
+    with open(os.path.join(dest, "vault.json")) as f:
+        cfg = json.load(f)
     cfg.update(supabaseKey=KEY, contact="the BIM team")
-    json.dump(cfg, open(os.path.join(dest, "vault.json"), "w"))
+    with open(os.path.join(dest, "vault.json"), "w") as f:
+        json.dump(cfg, f)
     os.environ["MYTOOLS_VAULT_API"] = "http://127.0.0.1:%d" % port
 
 
@@ -198,7 +200,9 @@ def click(ext, rel):
     """Run a stub exactly like pyRevit does: exec the file with __file__ set."""
     path = os.path.join(ext, *rel.split("/"))
     globs = {"__name__": "__main__", "__file__": path}
-    exec(compile(open(path, encoding="utf-8").read(), path, "exec"), globs)
+    with open(path, encoding="utf-8") as f:
+        src = f.read()
+    exec(compile(src, path, "exec"), globs)
     return globs
 
 
@@ -260,7 +264,8 @@ def main():
     assert os.path.isfile(os.path.join(tab, "Demo.panel", "Hello.pushbutton", "lookup.csv"))
     assert not os.path.exists(os.path.join(tab, "Demo.panel", "Hello.pushbutton", "helper.py")), "helper code on disk"
     assert not os.path.exists(os.path.join(ext, "lib", "shared.py")), "lib code on disk"
-    stub = open(os.path.join(ext, *hello.split("/")), encoding="utf-8").read()
+    with open(os.path.join(ext, *hello.split("/")), encoding="utf-8") as f:
+        stub = f.read()
     assert "greet" not in stub and "__title__ = 'Hello'" in stub
     assert "4 MyTools buttons ready" in fake.all(), fake.log
     ok("approval: toolbar downloaded, no Python code written to disk")
@@ -298,7 +303,8 @@ def main():
     srv.shutdown(); srv.server_close()
     assert click(ext, hello)["RESULT"][0] == "v2"
     assert ui.startup(ext) == "offline"
-    blob = open(os.path.join(store_dir, "offline.bin")).read()
+    with open(os.path.join(store_dir, "offline.bin")) as f:
+        blob = f.read()
     assert "greet" not in blob and "v2" not in blob
     ok("offline: buttons keep working from the encrypted copy")
 
