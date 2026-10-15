@@ -25,7 +25,10 @@ def check(name):
         except Exception:
             FAILED.append(name)
             print("  FAIL  " + name)
-            traceback.print_exc()
+            tb = traceback.format_exc()
+            print(tb)
+            if os.environ.get("GITHUB_ACTIONS"):
+                print("::error title=%s::%s" % (name.replace(":", " -"), tb[-3000:].replace("%", "%25").replace("\r", "").replace("\n", "%0A")))
         return fn
     return wrap
 
@@ -310,3 +313,5 @@ if FAILED:
     print("%d check(s) failed: %s" % (len(FAILED), ", ".join(FAILED)))
     sys.exit(1)
 print("All checks passed.")
+if os.environ.get("GITHUB_ACTIONS"):
+    print("::notice title=Smoke test::All checks passed (Python %s)" % sys.version.split()[0])
