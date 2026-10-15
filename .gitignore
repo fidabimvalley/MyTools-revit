@@ -1,7 +1,7 @@
-# Protected panels are downloaded here after sign-in and removed when access ends.
-# They must never be committed to this public repository.
-/MyTools.tab/*
-!/MyTools.tab/Account.panel/
-/.vault_shell.json
+bin/
+obj/
+out/
+dist/
 __pycache__/
-*.pyc
+*.user
+.vs/

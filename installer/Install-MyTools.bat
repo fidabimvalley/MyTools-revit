@@ -2,30 +2,27 @@
 setlocal
 title Install MyTools for Revit
 echo.
-echo   Installing MyTools for Revit...
+echo   Installing MyTools for Revit 2025 and 2026...
 echo.
 
-set "DEST=%APPDATA%\pyRevit\Extensions\MyTools.extension"
-set "ZIPURL=https://github.com/fidabimvalley/mytools-revit/archive/refs/heads/main.zip"
-
-if not exist "%APPDATA%\pyRevit" if not exist "%PROGRAMDATA%\pyRevit" (
-  echo   pyRevit doesn't seem to be installed on this PC.
-  echo   Install it first from https://github.com/pyrevitlabs/pyRevit/releases
-  echo   then run this installer again.
+tasklist /FI "IMAGENAME eq Revit.exe" 2>nul | find /I "Revit.exe" >nul
+if not errorlevel 1 (
+  echo   Revit is open. Please close Revit, then run this installer again.
   echo.
   pause
   exit /b 1
 )
 
+set "ZIPURL=https://github.com/fidabimvalley/MyTools-revit/releases/download/installer/MyTools-Revit.zip"
+
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$ErrorActionPreference = 'Stop';" ^
   "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;" ^
-  "$zip = Join-Path $env:TEMP 'mytools-revit.zip'; $tmp = Join-Path $env:TEMP 'mytools-revit-unzip';" ^
+  "$zip = Join-Path $env:TEMP 'MyTools-Revit.zip'; $tmp = Join-Path $env:TEMP 'MyTools-Revit';" ^
   "Invoke-WebRequest '%ZIPURL%' -OutFile $zip -UseBasicParsing;" ^
   "if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force };" ^
   "Expand-Archive $zip $tmp;" ^
-  "New-Item -ItemType Directory -Force '%DEST%' | Out-Null;" ^
-  "Copy-Item (Join-Path $tmp 'mytools-revit-main\*') '%DEST%' -Recurse -Force;" ^
+  "& (Join-Path $tmp 'install.ps1');" ^
   "Remove-Item $zip, $tmp -Recurse -Force"
 
 if errorlevel 1 (
@@ -37,9 +34,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo   Done! MyTools is installed in:
-echo   %DEST%
-echo.
-echo   Start Revit (or click pyRevit - Reload if it's open), then click MyTools - Sign In.
+echo   Done! Start Revit and open the MyTools tab, then click Sign In.
+echo   The first time, Revit asks about loading MyTools: click "Always Load".
 echo.
 pause

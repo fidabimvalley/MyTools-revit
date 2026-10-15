@@ -130,7 +130,7 @@ def run(stub_file, globs):
 
     repo_path = session.source_prefix + rel
     if not session.has(repo_path):
-        ui.alert("This button isn't available any more. Click Account → Sync now to update your toolbar.",
+        ui.alert("This button isn't available any more. Click Account → Check again to update your toolbar.",
                  cfg["toolName"])
         session.save()
         return

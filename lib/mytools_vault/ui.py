@@ -46,7 +46,27 @@ def _contact(cfg):
     return cfg.get("contact") or "your %s administrator" % cfg["toolName"]
 
 
+def _host():
+    """The MyTools Revit add-in, when running inside it (None under pyRevit or in tests)."""
+    try:
+        import mytools_host
+        return mytools_host.HOST
+    except ImportError:
+        return None
+
+
 def reload_pyrevit(cfg, ask_first=True, reason=""):
+    """Bring the ribbon in step with the buttons on this PC."""
+    host = _host()
+    if host is not None:
+        try:
+            host.RefreshRibbon()
+        except Exception as e:
+            alert("The toolbar couldn't be updated (%s). Restart Revit to see the changes." % e, cfg["toolName"])
+            return False
+        if reason:
+            alert(reason + " Your toolbar has been updated.", cfg["toolName"])
+        return True
     msg = (reason + "\n\n" if reason else "") + "Reload pyRevit now so the toolbar updates? (Takes a few seconds.)"
     if ask_first and alert(msg, cfg["toolName"], ["Reload now", "Later"]) != "Reload now":
         return False

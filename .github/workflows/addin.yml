@@ -1,0 +1,85 @@
+name: Build add-in
+
+# Builds the MyTools Revit add-in (Revit 2025-2026, no pyRevit needed), tests it in IronPython on
+# Windows, and publishes MyTools-Revit.zip next to Install-MyTools.bat on the "installer" release.
+on:
+  push:
+    paths: ["addin/**", "lib/**", "vault.json", "tests/**", "tools/**", ".github/workflows/addin.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        shell: pwsh
+        run: |
+          dotnet build addin/MyTools.Revit/MyTools.Revit.csproj -c Release -o out/app -nologo
+          if ($LASTEXITCODE) { exit 1 }
+          dotnet build addin/MyTools.Engine/MyTools.Engine.csproj -c Release -o out/engine -nologo
+          if ($LASTEXITCODE) { exit 1 }
+          dotnet build addin/SmokeTest/SmokeTest.csproj -c Release -o out/smoke -nologo
+          if ($LASTEXITCODE) { exit 1 }
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $pkg = "dist/MyTools-Revit"; $app = "$pkg/app"
+          New-Item -ItemType Directory -Force $app, "$app/engine", "$app/python", "$app/icons" | Out-Null
+          Copy-Item out/app/MyTools.Revit.dll $app
+          Copy-Item out/engine/* "$app/engine" -Recurse -Exclude "MyTools.Revit.*", "*.pdb"
+          Copy-Item addin/python/* "$app/python" -Recurse
+          Copy-Item lib/mytools_vault "$app/python/mytools_vault" -Recurse
+          Get-ChildItem "$app/python" -Recurse -Directory -Filter __pycache__ | Remove-Item -Recurse -Force
+          Copy-Item addin/icons/*.png "$app/icons"
+          Copy-Item vault.json, addin/install/install.ps1 $pkg
+          Compress-Archive "$pkg/*" dist/MyTools-Revit.zip -Force
+          Get-ChildItem $app | Format-Table Name, Length
+          "Standard library: " + (Test-Path "$app/engine/lib/json/__init__.py")
+
+      - name: Smoke test (IronPython, Windows Forms, encryption, server)
+        shell: pwsh
+        run: |
+          out/smoke/SmokeTest.exe --path dist/MyTools-Revit/app/python addin/tests/smoke.py dist/MyTools-Revit/app vault.json
+          if ($LASTEXITCODE) { "::error::Smoke test failed"; exit 1 }
+
+      - name: Sign-in and access tests in IronPython
+        shell: pwsh
+        env:
+          MYTOOLS_VAULT_TEST: "1"
+        run: |
+          out/smoke/SmokeTest.exe --path lib --path tools tests/test_vault.py
+          if ($LASTEXITCODE) { "::error::Access tests failed in IronPython"; exit 1 }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyTools-Revit
+          path: dist/MyTools-Revit.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SmokeTest
+          path: |
+            out/smoke
+            addin/tests/smoke.py
+
+      - name: Publish
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view installer *> $null
+          if ($LASTEXITCODE) {
+            gh release create installer installer/Install-MyTools.bat installer/Uninstall-MyTools.bat dist/MyTools-Revit.zip --target $env:GITHUB_SHA --title "MyTools for Revit installer" --notes "Download **Install-MyTools.bat** and double-click it."
+          } else {
+            gh release upload installer dist/MyTools-Revit.zip --clobber
+          }

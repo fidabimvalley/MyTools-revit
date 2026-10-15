@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Platform helpers that work in pyRevit's IronPython 2.7 and CPython 3 engines.
+"""Platform helpers that work in IronPython (2.7 and 3.4) and CPython 3.
 
 Inside Revit everything goes through .NET (web requests, DPAPI encryption, clipboard),
 which both engines can reach. Outside Revit (automated tests) plain Python is used.
@@ -130,7 +130,7 @@ def _py_request(method, url, headers, body, timeout_ms):
 def http(method, url, headers=None, body=None, timeout_ms=15000):
     """Returns (status_code, response_text). Raises NetworkError when the server can't be reached."""
     headers = dict(headers or {})
-    headers.setdefault("User-Agent", "MyTools-pyRevit")
+    headers.setdefault("User-Agent", "MyTools-Revit")
     if HAS_CLR:
         return _net_request(method, url, headers, body, timeout_ms)
     return _py_request(method, url, headers, body, timeout_ms)
@@ -149,10 +149,20 @@ def http_json(method, url, headers=None, body=None, timeout_ms=15000):
 _ENTROPY = "mytools-vault-v1"
 
 
+def _load_dpapi():
+    """ProtectedData lives in its own assembly on .NET 8 (Revit 2025+), in System.Security before."""
+    for name in ("System.Security.Cryptography.ProtectedData", "System.Security"):
+        try:
+            clr.AddReference(name)
+            return
+        except Exception:
+            pass
+
+
 def protect(text):
     """Encrypt for the current Windows user. Returns a base64 string."""
     if HAS_CLR:
-        clr.AddReference("System.Security")
+        _load_dpapi()
         from System import Convert
         from System.Security.Cryptography import ProtectedData, DataProtectionScope
         from System.Text import Encoding
@@ -166,7 +176,7 @@ def protect(text):
 
 def unprotect(blob):
     if HAS_CLR:
-        clr.AddReference("System.Security")
+        _load_dpapi()
         from System import Convert
         from System.Security.Cryptography import ProtectedData, DataProtectionScope
         from System.Text import Encoding
