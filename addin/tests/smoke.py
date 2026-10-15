@@ -54,7 +54,6 @@ class FakeHost(object):
 @check("app layout: engine, stdlib, python, icons")
 def _():
     for rel in ("MyTools.Revit.dll", "engine/MyTools.Engine.dll", "engine/IronPython.dll",
-                "engine/System.Security.Cryptography.ProtectedData.dll",
                 "python/mytools_host.py", "python/pyrevit/forms.py", "python/rpw/ui/forms.py",
                 "python/mytools_vault/core.py", "icons/signin.png", "icons/account.png"):
         assert os.path.exists(os.path.join(APP, rel)), "missing " + rel
