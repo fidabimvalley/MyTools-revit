@@ -17,11 +17,8 @@ namespace MyTools.Engine
         ScriptScope _host;
 
         /// <summary>Assemblies a button asks for by name (clr.AddReference) come from the engine folder first.</summary>
-        static IDisposable EngineScope() =>
-            AssemblyLoadContext.GetLoadContext(typeof(PythonEngine).Assembly)?.EnterContextualReflection()
-            ?? new NoScope();
-
-        sealed class NoScope : IDisposable { public void Dispose() { } }
+        static AssemblyLoadContext.ContextualReflectionScope EngineScope() =>
+            AssemblyLoadContext.GetLoadContext(typeof(PythonEngine).Assembly).EnterContextualReflection();
 
         public void Initialize(string appDir, string extRoot, IHost host)
         {
